@@ -1,0 +1,11 @@
+[Oo]bj/
+[Bb]in
+[Dd]ebug*/
+[Rr]elease*/
+*.v12.suo
+Mozu.config
+TestResults/
+packages/
+[Bb]uild/
+.nuget/
+*.user

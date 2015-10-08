@@ -35,16 +35,16 @@ namespace Mozu_BED_Training_Exercise_14_4
 
             //Filter orders by statuses
             var acceptedOrders = orderResource.GetOrdersAsync(filter: "Status eq 'Accepted'").Result;
-            var closedOrders = orderResource.GetOrdersAsync(filter: "Status eq 'Closed'").Result;
+            var closedOrders = orderResource.GetOrdersAsync(filter: "Status eq 'Completed'").Result;
 
             //Filter orders by acct number
-            var orderByCustId = orderResource.GetOrdersAsync(filter: "CustomerAccountId eq '1001'").Result;
+            var orderByCustId = orderResource.GetOrdersAsync(filter: "CustomerAccountId eq '1002'").Result;
 
             //Filter orders by email
-            var orderByEmail = orderResource.GetOrdersAsync(filter: "Email eq 'test@customer.com'").Result;
+            var orderByEmail = orderResource.GetOrdersAsync(filter: "Email eq 'captainmal@serenitycorp.com'").Result;
 
             //Filter orders by order number
-            var existingOrders = orderResource.GetOrdersAsync(filter: "OrderNumber eq '1'").Result;
+            var existingOrders = orderResource.GetOrdersAsync(filter: "OrderNumber eq '4'").Result;
 
             //Initialize the Order variable
             Mozu.Api.Contracts.CommerceRuntime.Orders.Order existingOrder = null;
@@ -101,7 +101,7 @@ namespace Mozu_BED_Training_Exercise_14_4
         [TestMethod]
         public void Exercise_14_2_Auth_Capture_Order_Payment()
         {
-            var orderNumber = 11;
+            var orderNumber = 5;
 
             //Create an Order resource. This resource is used to get, create, update orders
             var orderResource = new Mozu.Api.Resources.Commerce.OrderResource(_apiContext);
@@ -144,13 +144,24 @@ namespace Mozu_BED_Training_Exercise_14_4
 
             var action = new Mozu.Api.Contracts.CommerceRuntime.Payments.PaymentAction()
             {
-                    Amount = existingOrder.Total,
+                    Amount = 30m,
                     CurrencyCode = "USD",
                     InteractionDate = DateTime.Now,
                     NewBillingInfo = billingInfo,
                     ActionName = "CreatePayment",
                     ReferenceSourcePaymentId = null,
                     CheckNumber = "1234"
+            };
+
+            var reAction = new Mozu.Api.Contracts.CommerceRuntime.Payments.PaymentAction()
+            {
+                Amount = 300m,
+                CurrencyCode = "USD",
+                InteractionDate = DateTime.Now,
+                NewBillingInfo = billingInfo,
+                ActionName = "CapturePayment",
+                ReferenceSourcePaymentId = null,
+                CheckNumber = "1234"
             };
            
             try
@@ -166,17 +177,16 @@ namespace Mozu_BED_Training_Exercise_14_4
             if(authorizedPayment != null)
             {
                 action.ActionName = "CapturePayment";
-                var capturedPayment = paymentResource.PerformPaymentActionAsync(action, existingOrder.Id, authorizedPayment.Id).Result;
+                var capturedPayment = paymentResource.PerformPaymentActionAsync(reAction, existingOrder.Id, authorizedPayment.Id).Result;
             }
             else if(pendingPayment != null)
             {
                 action.ActionName = "CapturePayment";
-                var capturedPayment = paymentResource.PerformPaymentActionAsync(action, existingOrder.Id, pendingPayment.Id).Result;
+                var capturedPayment = paymentResource.PerformPaymentActionAsync(reAction, existingOrder.Id, pendingPayment.Id).Result;
             }
             else
             {
                 var authPayment = paymentResource.CreatePaymentActionAsync(action, existingOrder.Id).Result;
-                
             }
         }
 
@@ -191,7 +201,7 @@ namespace Mozu_BED_Training_Exercise_14_4
 
             var fulfillmentActionResource = new Mozu.Api.Resources.Commerce.Orders.FulfillmentActionResource(_apiContext);
 
-            var orderNumber = 6;
+            var orderNumber = 2;
             var filter = string.Format("OrderNumber eq '{0}'", orderNumber);
 
             var existingOrder = (orderResource.GetOrdersAsync(startIndex: 0, pageSize: 1, filter: filter).Result).Items[0];
@@ -205,7 +215,8 @@ namespace Mozu_BED_Training_Exercise_14_4
 
                 packageItems.Add(new Mozu.Api.Contracts.CommerceRuntime.Fulfillment.PackageItem()
                 {
-                    ProductCode = String.IsNullOrWhiteSpace(orderItem.Product.VariationProductCode) ? orderItem.Product.ProductCode : orderItem.Product.VariationProductCode,
+                    ProductCode = String.IsNullOrWhiteSpace(orderItem.Product.VariationProductCode) 
+                    ? orderItem.Product.ProductCode : orderItem.Product.VariationProductCode,
                     Quantity = orderItem.Quantity,
                     FulfillmentItemType = "Physical"
                     //LineId = orderItem.LineId
@@ -282,7 +293,7 @@ namespace Mozu_BED_Training_Exercise_14_4
         [TestMethod]
         public void Exercise_14_4_Duplicate_Order()
         {
-            var filter = string.Format("OrderNumber eq '{0}'", "6");
+            var filter = string.Format("OrderNumber eq '{0}'", "5");
 
             var orderResource = new Mozu.Api.Resources.Commerce.OrderResource(_apiContext);
             var existingOrder = (orderResource.GetOrdersAsync(startIndex: 0, pageSize: 1, filter: filter).Result).Items[0];
